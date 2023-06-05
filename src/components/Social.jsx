@@ -28,14 +28,8 @@ export default function Social() {
   async function login() {
     if (!sdkRef.current) {
       const socialLoginSDK = new SocialLogin();
-      const signature1 = await socialLoginSDK.whitelistUrl('http://localhost:3000');
-      await socialLoginSDK.init({
-        chainId: ethers.utils.hexValue(ChainId.POLYGON_MUMBAI).toString(),
-        network: "polygon testnet",
-        whitelistUrls: {
-          'http://localhost:3000': signature1,
-        }
-      });
+    //   const signature1 = await socialLoginSDK.whitelistUrl('http://localhost:3000');
+      await socialLoginSDK.init();
       sdkRef.current = socialLoginSDK;
     }
     if (!sdkRef.current.provider) {
