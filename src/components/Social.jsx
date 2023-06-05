@@ -6,23 +6,10 @@ import { ethers } from "ethers";
 import SmartAccount from "@biconomy/smart-account";
 
 const Social = () => {
-  const [smartAccount, setSmartAccount] = useState(null);
-  const [interval, enableInterval] = useState(false);
-  const sdkRef = useRef(null);
-  const [loading, setLoading] = useState(false);
-  const [provider, setProvider] = useState(null);
 
-  useEffect(() => {
-    let configureLogin;
-    if (interval) {
-      configureLogin = setInterval(() => {
-        if (sdkRef.current && sdkRef.current.provider) {
-          setupSmartAccount();
-          clearInterval(configureLogin);
-        }
-      }, 1000);
+    const isConnected = async () => {
+        
     }
-  }, [interval]);
 
   const login = async () => {
       const socialLogin = new SocialLogin();
@@ -40,50 +27,24 @@ const Social = () => {
     );
     const accounts = await provider.listAccounts();
     console.log("EOA address", accounts)
-    }
 
-  const setupSmartAccount = async () => {
-    if (!sdkRef.current || !sdkRef.current.provider) return;
-    sdkRef.current.hideWallet();
-    setLoading(true);
-    const web3Provider = new ethers.providers.Web3Provider(
-      sdkRef.current.provider
-    );
-    setProvider(web3Provider);
-    try {
-      const smartAccount = new SmartAccount(web3Provider, {
+    let options = {
         activeNetworkId: ChainId.POLYGON_MUMBAI,
-        supportedNetworksIds: [ChainId.POLYGON_MUMBAI],
-        networkConfig: [
-          {
+        supportedNetworksIds: [ChainId.GOERLI, ChainId.POLYGON_MAINNET, ChainId.POLYGON_MUMBAI],
+        networkConfig: {
             chainId: ChainId.POLYGON_MUMBAI,
-            dappAPIKey: "your dapp api key from biconomy dashboard",
-          },
-        ],
-      });
-      await smartAccount.init();
-      setSmartAccount(smartAccount);
-      setLoading(false);
-    } catch (err) {
-      console.log("error setting up smart account... ", err);
+            dappAPIKey: "_TEfd0tVk.32daf94b-abde-44f5-b735-a3994da09c8d",
+        }
     }
-  }
 
-  const logout = async () => {
-    if (!sdkRef.current) {
-      console.error("Web3Modal not initialized.");
-      return;
-    }
-    await sdkRef.current.logout();
-    sdkRef.current.hideWallet();
-    setSmartAccount(null);
-    enableInterval(false);
-  };
+    let smartAccount = new SmartAccount(provider, options);
+    smartAccount = await smartAccount.init();
+}
 
   return (
     <div>
         <button className="absolute top-1/2 left-1/2 bg-black text-white rounded-md" onClick={login}>Connect</button>
-        <span className="absolute top-1/4 right-1/4 bg-black text-white rounded-md">Connect</span>
+        <span className="absolute top-1/4 right-1/4 bg-black text-white rounded-md">{isConnected}</span>
     </div>
   );
 };
