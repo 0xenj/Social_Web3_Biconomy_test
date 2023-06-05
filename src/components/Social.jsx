@@ -25,18 +25,22 @@ const Social = () => {
   }, [interval]);
 
   const login = async () => {
-    if (!sdkRef.current) {
       const socialLogin = new SocialLogin();
-      await socialLogin.init();
-      sdkRef.current = socialLogin;
+
+      const signature1 = await socialLogin.whitelistUrl('https://localhost:3000/');
+      await socialLogin.init({
+        whitelistUrl: {
+            'https://localhost:3000/': signature1,
+        }
+      });
+      socialLogin.showWallet();
+    if (!socialLogin?.provider) return;
+    const provider = new ethers.providers.Web3Provider(
+        socialLogin.provider,
+    );
+    const accounts = await provider.listAccounts();
+    console.log("EOA address", accounts)
     }
-    if (!sdkRef.current.provider) {
-      sdkRef.current.showWallet();
-      enableInterval(true);
-    } else {
-      setupSmartAccount();
-    }
-  }
 
   const setupSmartAccount = async () => {
     if (!sdkRef.current || !sdkRef.current.provider) return;
@@ -79,6 +83,7 @@ const Social = () => {
   return (
     <div>
         <button className="absolute top-1/2 left-1/2 bg-black text-white rounded-md" onClick={login}>Connect</button>
+        <span className="absolute top-1/4 right-1/4 bg-black text-white rounded-md">Connect</span>
     </div>
   );
 };
