@@ -24,11 +24,11 @@ const Social = () => {
     }
   }, [interval]);
 
-  async function login() {
+  const login = async () => {
     if (!sdkRef.current) {
-      const socialLoginSDK = new SocialLogin();
-      await socialLoginSDK.init();
-      sdkRef.current = socialLoginSDK;
+      const socialLogin = new SocialLogin();
+      await socialLogin.init();
+      sdkRef.current = socialLogin;
     }
     if (!sdkRef.current.provider) {
       sdkRef.current.showWallet();
@@ -38,7 +38,7 @@ const Social = () => {
     }
   }
 
-  async function setupSmartAccount() {
+  const setupSmartAccount = async () => {
     if (!sdkRef.current || !sdkRef.current.provider) return;
     sdkRef.current.hideWallet();
     setLoading(true);
@@ -76,7 +76,11 @@ const Social = () => {
     enableInterval(false);
   };
 
-  return <div>My Component</div>;
+  return (
+    <div>
+        <button className="absolute top-1/2 left-1/2 bg-black text-white rounded-md" onClick={login}>Connect</button>
+    </div>
+  );
 };
 
 export default Social;
