@@ -1,52 +1,106 @@
-import React, { useState, useEffect, useRef } from "react";
-import "@biconomy/web3-auth/dist/src/style.css"
+import React, { useState, useEffect, useRef } from 'react';
 import SocialLogin from "@biconomy/web3-auth";
 import { ChainId } from "@biconomy/core-types";
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 import SmartAccount from "@biconomy/smart-account";
+import "@biconomy/web3-auth/dist/src/style.css"
+import CircularProgress from '@mui/material/CircularProgress';
 
-const Social = () => {
+export default function Social() {
+  const [smartAccount, setSmartAccount] = useState(null);
+  const [interval, enableInterval] = useState(false);
+  const sdkRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [provider, setProvider] = useState(null);
 
-    const isConnected = async () => {
-        
+  useEffect(() => {
+    let configureLogin;
+    if (interval) {
+      configureLogin = setInterval(() => {
+        if (!!sdkRef.current?.provider) {
+          setupSmartAccount();
+          clearInterval(configureLogin);
+        }
+      }, 1000);
     }
+  }, [interval]);
 
-  const login = async () => {
-      const socialLogin = new SocialLogin();
-
-      const signature1 = await socialLogin.whitelistUrl('https://localhost:3000/');
-      await socialLogin.init({
-        whitelistUrl: {
-            'https://localhost:3000/': signature1,
+  async function login() {
+    if (!sdkRef.current) {
+      const socialLoginSDK = new SocialLogin();
+      const signature1 = await socialLoginSDK.whitelistUrl('http://localhost:3000');
+      await socialLoginSDK.init({
+        chainId: ethers.utils.hexValue(ChainId.POLYGON_MUMBAI).toString(),
+        network: "polygon testnet",
+        whitelistUrls: {
+          'http://localhost:3000': signature1,
         }
       });
-      socialLogin.showWallet();
-    if (!socialLogin?.provider) return;
-    const provider = new ethers.providers.Web3Provider(
-        socialLogin.provider,
-    );
-    const accounts = await provider.listAccounts();
-    console.log("EOA address", accounts)
+      sdkRef.current = socialLoginSDK;
+    }
+    if (!sdkRef.current.provider) {
+      sdkRef.current.showWallet();
+      enableInterval(true);
+    } else {
+      setupSmartAccount();
+    }
+  }
 
-    let options = {
+  async function setupSmartAccount() {
+    if (!sdkRef?.current?.provider) return;
+    sdkRef.current.hideWallet();
+    setLoading(true);
+    const web3Provider = new ethers.providers.Web3Provider(
+      sdkRef.current.provider
+    );
+    setProvider(web3Provider);
+    try {
+      const smartAccount = new SmartAccount(web3Provider, {
         activeNetworkId: ChainId.POLYGON_MUMBAI,
-        supportedNetworksIds: [ChainId.GOERLI, ChainId.POLYGON_MAINNET, ChainId.POLYGON_MUMBAI],
-        networkConfig: {
+        supportedNetworksIds: [ChainId.POLYGON_MUMBAI],
+        networkConfig: [
+          {
             chainId: ChainId.POLYGON_MUMBAI,
             dappAPIKey: "_TEfd0tVk.32daf94b-abde-44f5-b735-a3994da09c8d",
-        }
+          },
+        ],
+      });
+      await smartAccount.init();
+      setSmartAccount(smartAccount);
+      setLoading(false);
+    } catch (err) {
+      console.log('error setting up smart account... ', err);
     }
+  }
 
-    let smartAccount = new SmartAccount(provider, options);
-    smartAccount = await smartAccount.init();
-}
+  const logout = async () => {
+    if (!sdkRef.current) {
+      console.error('Web3Modal not initialized.');
+      return;
+    }
+    await sdkRef.current.logout();
+    sdkRef.current.hideWallet();
+    setSmartAccount(null);
+    enableInterval(false);
+  };
 
   return (
     <div>
-        <button className="absolute top-1/2 left-1/2 bg-black text-white rounded-md" onClick={login}>Connect</button>
-        <span className="absolute top-1/4 right-1/4 bg-black text-white rounded-md">{isConnected}</span>
+      {
+        !smartAccount && !loading && <button className='fixed top-6 right-10 bg-slate-700 rounded-md text-white font-bold hover:bg-slate-500 w-20 h-8' onClick={login}>Login</button>
+      }
+      {
+        loading && <CircularProgress />
+      }
+      {
+        !!smartAccount && (
+          <div className="buttonWrapper">
+            <h3>Smart account address:</h3>
+            <p>{smartAccount.address}</p>
+            <button onClick={logout}>Logout</button>
+          </div>
+        )
+      }
     </div>
   );
-};
-
-export default Social;
+}
