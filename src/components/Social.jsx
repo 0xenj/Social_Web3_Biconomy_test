@@ -89,8 +89,8 @@ export default function Social() {
       {
         !!smartAccount && (
           <div>
-            <h3 className='fixed top-16 right-10 font-semibold'>Smart account address:</h3>
-            <p className='fixed top-20 right-10 text-base'>{smartAccount.address}</p>
+            <h3 className='fixed top-16 right-10 font-bold'>Smart account address:</h3>
+            <p className='fixed top-20 right-10 text-base '>{smartAccount.address}</p>
             <button className='fixed top-6 right-10 bg-slate-700 rounded-md text-white font-bold hover:bg-slate-500 w-20 h-8'onClick={logout}>Logout</button>
           </div>
         )
